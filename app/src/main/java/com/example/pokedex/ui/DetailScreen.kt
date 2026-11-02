@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import com.example.pokedex.data.imageUrlFor
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,10 +25,10 @@ fun DetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Info") },
+                title = { Text("Детали") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
                     }
                 },
                 actions = {
@@ -56,10 +56,20 @@ fun DetailScreen(
                         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        AsyncImage(
+                        SubcomposeAsyncImage(
                             model = imageUrlFor(p.id),
                             contentDescription = p.name,
-                            modifier = Modifier.size(240.dp)
+                            modifier = Modifier.size(240.dp),
+                            loading = {
+                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator()
+                                }
+                            },
+                            error = {
+                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    Text("Не удалось загрузить фото")
+                                }
+                            }
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(

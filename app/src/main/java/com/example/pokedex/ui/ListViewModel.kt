@@ -8,7 +8,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 sealed interface ListContent {
     data object Loading : ListContent
     data class Error(val message: String) : ListContent
@@ -33,8 +34,9 @@ class ListViewModel(
     private val _state = MutableStateFlow(ListUiState())
     val state: StateFlow<ListUiState> = _state
 
-    //у PokeAPI нету серверного поиска, загрузила список один раз и локально отфильтровала
     private var allItems: List<PokemonItem> = emptyList()
+    private var isLoaded = false
+    private var loadJob: Job? = null
 
     init { load() }
 
@@ -42,21 +44,26 @@ class ListViewModel(
         when (event) {
             is ListEvent.QueryChanged -> {
                 _state.update { it.copy(query = event.query) }
-                applyFilter()
+                if (isLoaded) applyFilter()
             }
             ListEvent.Retry -> load()
         }
     }
 
     private fun load() {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            isLoaded = false
             _state.update { it.copy(content = ListContent.Loading) }
-            runCatching { repo.getAll() }.fold(
-                onSuccess = { allItems = it; applyFilter() },
-                onFailure = { e ->
-                    _state.update { it.copy(content = ListContent.Error(e.message ?: "Network error")) }
-                }
-            )
+            try {
+                allItems = repo.getAll()
+                isLoaded = true
+                applyFilter()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(content = ListContent.Error(e.message ?: "Ошибка сети")) }
+            }
         }
     }
 

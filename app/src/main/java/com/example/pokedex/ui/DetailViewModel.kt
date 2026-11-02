@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 
 sealed interface DetailUiState {
     data object Loading : DetailUiState
@@ -24,15 +26,15 @@ sealed interface DetailEvent {
     data object ToggleFavourite : DetailEvent
 }
 
-class DetailViewModel(
-    savedStateHandle: SavedStateHandle
+class DetailViewModel @JvmOverloads constructor(
+    savedStateHandle: SavedStateHandle,
+    private val repo: PokemonRep = PokemonRep()
 ) : ViewModel() {
-
-    private val repo = PokemonRep()
 
     private val id: Int = checkNotNull(savedStateHandle["id"])
 
     private val _state = MutableStateFlow<DetailUiState>(DetailUiState.Loading)
+    private var loadJob: Job? = null
     val state: StateFlow<DetailUiState> = _state
 
     init {
@@ -63,15 +65,18 @@ class DetailViewModel(
     }
 
     private fun load() {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             _state.value = DetailUiState.Loading
-            _state.value = runCatching { repo.getById(id) }.fold(
-                onSuccess = { item ->
-                    val fav = FavouritesRep.items.value.any { it.id == id }
-                    DetailUiState.Success(item, fav)
-                },
-                onFailure = { DetailUiState.Error(it.message ?: "Network error") }
-            )
+            try {
+                val item = repo.getById(id)
+                val fav = FavouritesRep.items.value.any { it.id == id }
+                _state.value = DetailUiState.Success(item, fav)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.value = DetailUiState.Error(e.message ?: "Ошибка сети")
+            }
         }
     }
 }

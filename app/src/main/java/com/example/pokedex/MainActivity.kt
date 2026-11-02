@@ -3,7 +3,7 @@ package com.example.pokedex
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.MaterialTheme
+import com.example.pokedex.ui.theme.PokedexTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -13,12 +13,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.pokedex.ui.*
+import com.example.pokedex.work.schedulePrefetch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        schedulePrefetch(this)
         setContent {
-            MaterialTheme {
+            PokedexTheme {
                 val nav = rememberNavController()
                 NavHost(navController = nav, startDestination = "list") {
                     composable("list") {
