@@ -25,10 +25,10 @@ fun FavouritesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Favourites") },
+                title = { Text("Избранное") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
                     }
                 }
             )
@@ -36,7 +36,7 @@ fun FavouritesScreen(
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
             when (state) {
-                FavouritesUiState.Empty -> Text("Nothing to see here yet")
+                FavouritesUiState.Empty -> Text("Список пока пуст")
                 is FavouritesUiState.Success -> LazyColumn(
                     Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
@@ -62,7 +62,7 @@ fun FavouritesScreen(
                                     Text("#${p.id}", style = MaterialTheme.typography.bodyMedium)
                                 }
                                 IconButton(onClick = { onEvent(FavouritesEvent.Remove(p.id)) }) {
-                                    Icon(Icons.Filled.Delete, contentDescription = "Remove from favs")
+                                    Icon(Icons.Filled.Delete, contentDescription = "Удалить из Избранного")
                                 }
                             }
                         }

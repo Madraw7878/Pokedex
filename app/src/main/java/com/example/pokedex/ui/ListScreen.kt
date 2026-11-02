@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.pokedex.data.PokemonItem
+import androidx.compose.material.icons.filled.Refresh
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,8 +28,11 @@ fun ListScreen(
             TopAppBar(
                 title = { Text("Pokedex") },
                 actions = {
+                    IconButton(onClick = { onEvent(ListEvent.Retry) }) {
+                        Icon(Icons.Filled.Refresh, contentDescription = "Обновить")
+                    }
                     IconButton(onClick = onFavouritesClick) {
-                        Icon(Icons.Filled.Favorite, contentDescription = "Favourites")
+                        Icon(Icons.Filled.Favorite, contentDescription = "Избранное")
                     }
                 }
             )
@@ -38,15 +42,20 @@ fun ListScreen(
             OutlinedTextField(
                 value = state.query,
                 onValueChange = { onEvent(ListEvent.QueryChanged(it)) },
-                label = { Text("Search by name") },
+                label = { Text("Поиск по имени") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+            Text(
+                "Показаны первые 151 покемонов",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 when (val c = state.content) {
                     ListContent.Loading -> CircularProgressIndicator()
                     is ListContent.Error -> ErrorView(c.message) { onEvent(ListEvent.Retry) }
-                    ListContent.Empty -> Text("Nothing is found")
+                    ListContent.Empty -> Text("Ничего не найдено")
                     is ListContent.Success -> PokemonList(c.items, onItemClick)
                 }
             }
@@ -88,6 +97,6 @@ fun ErrorView(message: String, onRetry: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp)) {
         Text("Error: $message")
         Spacer(Modifier.height(8.dp))
-        Button(onClick = onRetry) { Text("Retry") }
+        Button(onClick = onRetry) { Text("Обновить") }
     }
 }
